@@ -15,6 +15,7 @@ void merge(int leftstart, int leftend, int rightstart, int rightend){
 	j = rightstart;
 	k = 0;
 
+	// Merge elements into B in sorted order
 	while(i <= leftend && j <= rightend){
 		if(A[i] <= A[j]){
 			B[k++] = A[i++];
@@ -52,11 +53,64 @@ void my_mergesort(int left, int right){
 
 /* this function will be called by the testing program. */
 void * parallel_mergesort(void *arg){
-		return NULL;
+	struct argument *args = (struct argument *)arg;
+	int left = args->left;
+	int right = args->right;
+	int level = args->level;
+
+	// free argument list 
+	free(args); 
+
+	if (left > right) {
+		if (level >= cutoff) { 
+			// base case: use serial my_mergesort
+			my_mergesort(left, right);
+		} else {
+			// divide the array and create threads 
+			int mid = left + (right - left) / 2;
+
+			// build arguments for left and right subarrays
+			struct argument *leftArg = buildArgs(left, mid, level + 1);
+			struct argument *rightArg = buildArgs(mid + 1, right, level + 1);
+
+			// create threads for left and right subarrays
+			pthread_t leftThread, rightThread;
+
+			int leftCreateStat = pthread_create(&leftThread, NULL, parallel_mergesort, (void *)leftArg);
+			int rightCreateStat = pthread_create(&rightThread, NULL, parallel_mergesort, (void *)rightArg);
+
+			// hand thread creation failure 
+			if (leftCreateStat || rightCreateStat) {
+				fprintf(stderr, "Error creating threads\n");
+				exit(1);
+			}
+
+			// wait for both threads to finish
+			pthread_join(leftThread, NULL);
+			pthread_join(rightThread, NULL);
+
+			// merge the sorted subarrays
+			merge(left, mid, mid + 1, right);
+
+		}
+	}
+
+	return NULL; 
+	
 }
 
 /* we build the argument for the parallel_mergesort function. */
 struct argument * buildArgs(int left, int right, int level){
-		return NULL;
-}
+	struct argument *arg = (struct argument *)malloc(sizeof(struct argument));
+	if (!arg) {
+		// handle memory allocation failure
+		fprintf(stderr, "Memory allocation failed\n");
+		exit(1);
+	}
 
+	// set the fields of the argument struct
+	arg->left = left;
+	arg->right = right;
+	arg->level = level;
+	return arg;
+}
