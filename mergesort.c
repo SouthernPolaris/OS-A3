@@ -9,9 +9,15 @@
 #include <stdlib.h> /* for malloc */
 #undef mergesort
 
+#define MAX_THREADS sysconf(_SC_NPROCESSORS_ONLN)	// maximum number of threads allowed - set to number of CPU cores
+#include <unistd.h>		// for sysconf to get number of CPU cores
+
 #include "mergesort.h"
 #include <pthread.h>
 
+
+static int thread_count = 0;	// current number of threads
+static pthread_mutex_t thread_count_mutex = PTHREAD_MUTEX_INITIALIZER; // mutex to protect thread
 
 /* serial mergesort: this function will be called by mergesort() and also by parallel_mergesort(). */
 void merge(int leftstart, int leftend, int rightstart, int rightend){
@@ -81,33 +87,81 @@ void * parallel_mergesort(void *arg){
 	struct argument *leftArg = buildArgs(left, mid, level + 1);
 	struct argument *rightArg = buildArgs(mid + 1, right, level + 1);
 
-	pthread_t tL, tR; 
+	pthread_t tL, tR;
+	
+	int createdLeftThread = 0;	// flag to indicate if left thread was created
+	int createdRightThread = 0;	// flag to indicate if right thread was created
 
 	// Create two threads fo rhte two halves 
 	// If creation fails, fall back to serial on that half 
-	if (leftArg && pthread_create(&tL, NULL, parallel_mergesort, leftArg) != 0) {
-		// fallback serial 
-		if (leftArg) free (leftArg);
+	if(leftArg){
+		pthread_mutex_lock(&thread_count_mutex);
+		int can_create = (thread_count < MAX_THREADS);
+		pthread_mutex_unlock(&thread_count_mutex);
+
+			if(can_create){
+				if (pthread_create(&tL, NULL, parallel_mergesort, leftArg) == 0) {
+				// fallback serial 
+				pthread_mutex_lock(&thread_count_mutex);
+				thread_count++;
+				pthread_mutex_unlock(&thread_count_mutex);
+
+				createdLeftThread = 1;
+			} else{
+				free (leftArg);
+				mergesort(left, mid);
+				createdLeftThread = 0;
+			}
+		}	else {
+		// fallback serial as not enough threads
+		free(leftArg);
 		mergesort(left, mid);
-		tL = (pthread_t)0; // mark as "no thread" 
+		createdLeftThread = 0;
+		}
 	}
 
-	if (rightArg && pthread_create(&tR, NULL, parallel_mergesort, rightArg) != 0) {
-        
-        if (rightArg) free(rightArg);
-        mergesort(mid + 1, right);
-        tR = (pthread_t)0;
-    }
+	if(rightArg){
+		pthread_mutex_lock(&thread_count_mutex);
+		int can_create = (thread_count < MAX_THREADS);
+		pthread_mutex_unlock(&thread_count_mutex);
+
+		if(can_create){
+			if(pthread_create(&tR, NULL, parallel_mergesort, rightArg) == 0) {
+				pthread_mutex_lock(&thread_count_mutex);
+				thread_count++;
+				pthread_mutex_unlock(&thread_count_mutex);
+				createdRightThread = 1;
+			} else {
+				// fallback serial
+				free (rightArg);
+				mergesort(mid + 1, right);
+				createdRightThread = 0;
+			}
+		}	else{
+		// fallback serial as not enough threads
+		free(rightArg);
+		mergesort(mid + 1, right);
+		createdRightThread = 0;
+		}
+	}
 
     // Join any threads we successfully created; also free child args we allocated
-    if ((unsigned long)tL != 0UL) {
-        pthread_join(tL, NULL);
-        free(leftArg);
-    }
-    if ((unsigned long)tR != 0UL) {
-        pthread_join(tR, NULL);
-        free(rightArg);
-    }
+
+	if(createdLeftThread){
+		pthread_join(tL, NULL);
+		pthread_mutex_lock(&thread_count_mutex);
+		thread_count--;
+		pthread_mutex_unlock(&thread_count_mutex);
+		free(leftArg);
+	}
+
+	if(createdRightThread){
+		pthread_join(tR, NULL);
+		pthread_mutex_lock(&thread_count_mutex);
+		thread_count--;
+		pthread_mutex_unlock(&thread_count_mutex);
+		free(rightArg);
+	}
 
     // Merge the two sorted halves
     merge(left, mid, mid + 1, right);

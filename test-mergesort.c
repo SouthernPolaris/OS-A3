@@ -69,6 +69,7 @@ double getMilliSeconds(void)
 }
 
 
+
 /*
  * generate_random_array(int A[], int n, int seed):
  *
@@ -128,6 +129,7 @@ void printB(void){
 }
 
 int main(int argc, char **argv) {
+	setvbuf(stdout, NULL, _IONBF, 0);
 
 	if (argc < 4) { // there must be at least one command-line argument
 			fprintf(stderr, "Usage: %s <input size> <cutoff level> <seed> \n", argv[0]);
