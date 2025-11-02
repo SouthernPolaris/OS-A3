@@ -50,6 +50,12 @@ instruct the user how to use your program.
 
 A bash script was created that runs this parallel mergesort on varying values of input size and cutoff level. This was then compared to a regular sorting algorithm provided by the bash terminal. The seed was kept the same across all tests for consistent testing.
 
+The outputs of all these tests, including the time it took to sort them is written to `test_output.log` during test execution. For example:
+```
+Test with size=1000000, cutoff=10
+Sorting 1000000 elements took 0.09 seconds.
+```
+
 Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test if skipped if Valgrind is not installed
 
 ## Reflection and Self Assessment

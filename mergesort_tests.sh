@@ -12,7 +12,7 @@ cutoffs=(0 1 3 6 8 10)
 seed=10
 
 # File to store all outputs
-OUTPUT_FILE="test_output.txt"
+OUTPUT_FILE="test_output.log"
 
 # Clear previous output file
 : > "$OUTPUT_FILE"
@@ -28,9 +28,10 @@ for n in "${sizes[@]}"; do
 
         # Run the test-mergesort program and write output to temp file
         ./test-mergesort "$n" "$c" "$seed" >> "$temp_file" 2>> "$OUTPUT_FILE"
-
         # Append the output to the main output file
+        echo "Test with size=$n, cutoff=$c" >> "$OUTPUT_FILE"
         cat "$temp_file" >> "$OUTPUT_FILE"
+        echo "---------------------------------" >> "$OUTPUT_FILE"
 
         # Check if output is sorted
         if sort -n -c "$temp_file"; then
