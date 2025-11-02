@@ -5,22 +5,41 @@
 
 ## Overview
 
-Concisely explain what the program does. If this exceeds a couple of
-sentences, you're going too far. Generally, you should be pulling this
-right from the project specification. We don't want you to just cut and
-paste, but paraphrase what is stated in the project specification.
+This program performs mergesort in a parallel manner, by creating new threads to sort each subarray of the mergesort algorithm. This calls parallel mergesort by recursively creating threads until the specified maximum level is reached or max thread count is exceeded. It then merges all these parallel sorting calls into a fully sorted array recursively.
 
 ## Manifest
 
 A listing of source files and other non-generated files, and a brief
 (one-line) explanation of the purpose of each file.
 
+This project contains a header and an implementation file for the main parallel mergesort algorithm, a C file for manually running the mergesort, a Makefile to build the project, and a bash script to the program.
+
+- `mergesort.h`: Header file for the parallel mergesort. Contains the argument struct and function definitions.
+- `mergesort.c`: Implements the parallel mergesort algorithm.
+- `test-mergesort.c`: Enables the user to run the parallel mergesort algorithm through terminal input.
+- `Makefile`: Compiles the project into a single executable.
+- `mergesort_tests.sh`: Runs sorting tests and Valgrind memory leak checks for `pthread`.
+
 ## Building the project
 
-This section should tell the user how to build your code.  If you are
-delivering a library, where does it need to be installed, or how do you use
-it? Is this an executable, if so, how can a user get up to speed as fast as
-possible?
+1. Clean the Project
+```bash
+make clean
+```
+
+2. Compile the Project
+```bash
+make all
+```
+
+An executable file `test-mergesort` should be in the project root directory ready for usage.
+
+3. [Optional] (Recommended for Testing)
+```
+sudo apt install valgrind
+```
+- The test bash script uses Valgrind to check for memory leaks. If Valgrind is not installed on the system, it will skip this test, but for full test coverage, please ensure Valgrind is installed.
+
 
 ## Features and usage
 
@@ -29,13 +48,9 @@ instruct the user how to use your program.
 
 ## Testing
 
-This section should detail how you tested your code. Simply stating "I ran
-it a few times and it seems to work" is not sufficient. Your testing needs
-to be detailed here.
+A bash script was created that runs this parallel mergesort on varying values of input size and cutoff level. This was then compared to a regular sorting algorithm provided by the bash terminal. The seed was kept the same across all tests for consistent testing.
 
-## Known Bugs
-
-List known bugs that you weren't able to fix (or ran out of time to fix).
+Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test if skipped if Valgrind is not installed
 
 ## Reflection and Self Assessment
 
@@ -49,7 +64,5 @@ did the development and testing process go for you?
 
 ## Sources Used
 
-If you used any sources outside of the textbook, you should list them here. 
-If you looked something up on stackoverflow.com or you use help from AI, and 
-fail to cite it in this section, it will be considered plagiarism and dealt 
-with accordingly. So be safe CITE!
+https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
+https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks
