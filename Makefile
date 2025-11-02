@@ -9,4 +9,5 @@ test-mergesort: test-mergesort.o mergesort.o
 
 .PHONY: clean
 clean:
-	/bin/rm -f *.o *.d test-mergesort
+	/bin/rm -f *.o *.d *.log test-mergesort
+

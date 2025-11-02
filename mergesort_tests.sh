@@ -13,9 +13,11 @@ seed=10
 
 # File to store all outputs
 OUTPUT_FILE="test_output.log"
+OUTPUT_VALGRIND="valgrind_output.log"
 
 # Clear previous output file
 : > "$OUTPUT_FILE"
+: > "$OUTPUT_VALGRIND"
 
 # Iterate through sizes and cutoffs
 for n in "${sizes[@]}"; do
@@ -56,8 +58,8 @@ fi
 # Check for memory leaks using valgrind
 echo "Memory leak check with valgrind"
 
-# Run valgrind on a sample test (no output to keep terminal clean)
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./test-mergesort 1000 5 10 > /dev/null 2>&1
+# Run valgrind on a sample test and write to valgrind_output.log (no output to keep terminal clean)
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./test-mergesort 1000 5 10 > "$OUTPUT_VALGRIND" 2>&1
 echo "----------------------"
 # Check valgrind exit status
 if [ $? -eq 0 ]; then

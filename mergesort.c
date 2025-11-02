@@ -17,7 +17,7 @@
 static int thread_count = 0;	// current number of threads
 static pthread_mutex_t thread_count_mutex = PTHREAD_MUTEX_INITIALIZER; // mutex to protect thread
 
-/* serial mergesort: this function will be called by mergesort() and also by parallel_mergesort(). */
+/* This function will be called by mergesort and parallel_mergesort for merging sorted arrays */
 void merge(int leftstart, int leftend, int rightstart, int rightend){
     // Assumes A[leftstart..leftend] and A[rightstart..rightend] are already sorted.
 	int i, j, k;
@@ -34,10 +34,12 @@ void merge(int leftstart, int leftend, int rightstart, int rightend){
 		}
 	}
 
+	/* Copy remaining elements from left half */
 	while(i <= leftend){
 		B[k++] = A[i++];
 	}
 
+	/* Copy remaining elements from right half */
 	while(j <= rightend){
 		B[k++] = A[j++];
 	}
@@ -47,7 +49,7 @@ void merge(int leftstart, int leftend, int rightstart, int rightend){
     memcpy(&A[leftstart], &B[leftstart], count * sizeof(int));
 }
 
-/* serial mergesort (recursive) */
+/* Normal mergesort (recursive) */
 void mergesort(int left, int right) {
 	if (left >= right) return;
 	int mid = left + (right - left) / 2;
@@ -57,7 +59,7 @@ void mergesort(int left, int right) {
 
 }
 
-/* this function will be called by parallel_mergesort() as its base case. */
+/* This function will be called by parallel_mergesort() as its default case when threads can't be created */
 void my_mergesort(int left, int right){
 	mergesort(left, right); 
 }
@@ -73,7 +75,7 @@ void * parallel_mergesort(void *arg){
 
 	if (left >= right) return NULL;
 
-	// Base case: reached cutoff depth -> use serial mergesort
+	// If reached cutoff depth, use standard mergesort
 	if (level >= cutoff) {
 		mergesort(left, right);
 		return NULL;
@@ -90,13 +92,16 @@ void * parallel_mergesort(void *arg){
 	int createdLeftThread = 0;	// flag to indicate if left thread was created
 	int createdRightThread = 0;	// flag to indicate if right thread was created
 
-	// Create two threads fo rhte two halves 
-	// If creation fails, fall back to serial on that half 
+	// Create two threads for the two halves
+	// If creation fails, fall back to normal on that half 
 	if(leftArg){
+
+		// Lock mutex to check thread count
 		pthread_mutex_lock(&thread_count_mutex);
 		int can_create = (thread_count < MAX_THREADS);
 		pthread_mutex_unlock(&thread_count_mutex);
 
+		// Create left thread through parallel if possible
 		if(can_create){
 			if (pthread_create(&tL, NULL, parallel_mergesort, leftArg) == 0) {
 				pthread_mutex_lock(&thread_count_mutex);
@@ -105,24 +110,29 @@ void * parallel_mergesort(void *arg){
 				
 				createdLeftThread = 1;
 			} else{
-				// fallback serial 
+				// fallback non-parallel 
 				free (leftArg);
 				mergesort(left, mid);
 				createdLeftThread = 0;
 			}
 		} else {
-				// fallback serial as not enough threads
+				// fallback non-parallel as not enough threads
 				free(leftArg);
 				mergesort(left, mid);
 				createdLeftThread = 0;
 		}
 	}
 
+	// Create right thread for the right half
+	// If creation fails, fall back to normal on that half
 	if(rightArg){
+
+		// Lock mutex to check thread count
 		pthread_mutex_lock(&thread_count_mutex);
 		int can_create = (thread_count < MAX_THREADS);
 		pthread_mutex_unlock(&thread_count_mutex);
 
+		// Create right thread through parallel if possible
 		if(can_create){
 			if(pthread_create(&tR, NULL, parallel_mergesort, rightArg) == 0) {
 				pthread_mutex_lock(&thread_count_mutex);
@@ -130,21 +140,20 @@ void * parallel_mergesort(void *arg){
 				pthread_mutex_unlock(&thread_count_mutex);
 				createdRightThread = 1;
 			} else {
-				// fallback serial
+				// fallback non-parallel
 				free (rightArg);
 				mergesort(mid + 1, right);
 				createdRightThread = 0;
 			}
 		} else{
-			// fallback serial as not enough threads
+			// fallback non-parallel as not enough threads
 			free(rightArg);
 			mergesort(mid + 1, right);
 			createdRightThread = 0;
 		}
 	}
 
-    // Join any threads we successfully created; also free child args we allocated
-
+    // Join any threads we successfully created, both left and right. Free child args previously allocated
 	if(createdLeftThread){
 		pthread_join(tL, NULL);
 		pthread_mutex_lock(&thread_count_mutex);
@@ -161,14 +170,14 @@ void * parallel_mergesort(void *arg){
 		free(rightArg);
 	}
 
-    // Merge the two sorted halves
+    // Merge both sorted halves
     merge(left, mid, mid + 1, right);
 
     return NULL;
 	
 }
 
-/* we build the argument for the parallel_mergesort function. */
+/* Build argument for parallel_mergesort function */
 struct argument * buildArgs(int left, int right, int level){
 	struct argument *arg = (struct argument *)malloc(sizeof(struct argument));
 	if (!arg) {
@@ -177,7 +186,7 @@ struct argument * buildArgs(int left, int right, int level){
 		exit(1);
 	}
 
-	// set the fields of the argument struct
+	// set fields of argument struct
 	arg->left = left;
 	arg->right = right;
 	arg->level = level;

@@ -56,7 +56,7 @@ Test with size=1000000, cutoff=10
 Sorting 1000000 elements took 0.09 seconds.
 ```
 
-Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test if skipped if Valgrind is not installed
+Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test is skipped if Valgrind is not installed. The terminal logs of valgrind are also written to `valgrind_output.log`.
 
 ## Reflection and Self Assessment
 

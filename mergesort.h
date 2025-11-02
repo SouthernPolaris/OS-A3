@@ -1,3 +1,8 @@
+/**
+ * mergesort.h
+ * Header file for mergesort implementation with parallelization support
+ */
+
 #define TRUE 1
 #define FALSE 0
 
