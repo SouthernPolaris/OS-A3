@@ -1,6 +1,6 @@
 ## OS Assignment 3 Group 100
 
-* Authors: Asrith Atluri, Lalisa Thaiprasert, Elke Milne
+* Authors: Asrith Atluri (a1889440), Lalisa Thaiprasert (a1900119), Elke Milne (a1885485)
 * Group name: Group 100
 
 ## Overview
