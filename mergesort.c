@@ -97,24 +97,24 @@ void * parallel_mergesort(void *arg){
 		int can_create = (thread_count < MAX_THREADS);
 		pthread_mutex_unlock(&thread_count_mutex);
 
-			if(can_create){
-				if (pthread_create(&tL, NULL, parallel_mergesort, leftArg) == 0) {
-				// fallback serial 
+		if(can_create){
+			if (pthread_create(&tL, NULL, parallel_mergesort, leftArg) == 0) {
 				pthread_mutex_lock(&thread_count_mutex);
 				thread_count++;
 				pthread_mutex_unlock(&thread_count_mutex);
-
+				
 				createdLeftThread = 1;
 			} else{
+				// fallback serial 
 				free (leftArg);
 				mergesort(left, mid);
 				createdLeftThread = 0;
 			}
-		}	else {
-		// fallback serial as not enough threads
-		free(leftArg);
-		mergesort(left, mid);
-		createdLeftThread = 0;
+		} else {
+				// fallback serial as not enough threads
+				free(leftArg);
+				mergesort(left, mid);
+				createdLeftThread = 0;
 		}
 	}
 
@@ -135,11 +135,11 @@ void * parallel_mergesort(void *arg){
 				mergesort(mid + 1, right);
 				createdRightThread = 0;
 			}
-		}	else{
-		// fallback serial as not enough threads
-		free(rightArg);
-		mergesort(mid + 1, right);
-		createdRightThread = 0;
+		} else{
+			// fallback serial as not enough threads
+			free(rightArg);
+			mergesort(mid + 1, right);
+			createdRightThread = 0;
 		}
 	}
 
