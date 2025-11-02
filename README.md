@@ -43,13 +43,43 @@ sudo apt install valgrind
 
 ## Features and usage
 
-Summarise the main features of your program. It is also appropriate to
-instruct the user how to use your program.
+This program implements both serial and parallel merge sort using the POSIX threads (pthreads) library to demonstrate inter-thread synchronization and parellelism. 
+
+### Key Features:
+- Implements serial mergesort as a baseline algorithm 
+- Implements parallel mergesort that dynamically spawns threads based on a user-specified cutoff level. 
+- Uses a global mutex and thread counter to safely manage concurrent thread creation
+- Performs stable merging of sorted subarrays using a secondary buffer array 
+- Supports command-line arguments for `array size`, recursion `cut off` depth, and random `seed` for reproducible testing. 
+- Provides performance timing output to measure speedup as the cutoff increases. 
+- Includes a comprehensive test script for automated benchmarking and memory validation using Valgrind. 
+
+### Usage 
+To compile and run: 
+```
+make clean
+make all
+./test-mergesort <array_size> <cutoff_level> <seed>
+```
+Examples:
+```
+# Serial mergesort (no threading)
+./test-mergesort 1000000 0 42
+
+# Parallel mergesort up to 3 levels of threading
+./test-mergesort 1000000 3 42
+```
+The output will display the time taken to sort the array:
+```
+Sorting 1000000 elements took 2.15 seconds.
+```
+As the cutoff level increases, the program recursively creates more threads up to the limit, leading to improved performance on multi-core processors.
 
 ## Testing
 
 A bash script was created that runs this parallel mergesort on varying values of input size and cutoff level. This was then compared to a regular sorting algorithm provided by the bash terminal. The seed was kept the same across all tests for consistent testing.
 
+<<<<<<< HEAD
 The outputs of all these tests, including the time it took to sort them is written to `test_output.log` during test execution. For example:
 ```
 Test with size=1000000, cutoff=10
@@ -57,16 +87,57 @@ Sorting 1000000 elements took 0.09 seconds.
 ```
 
 Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test is skipped if Valgrind is not installed. The terminal logs of valgrind are also written to `valgrind_output.log`.
+=======
+Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test is skipped if Valgrind is not installed
+
+This process validates:
+- Correctness: The array is sorted in ascending order for all tested configurations.
+- Performance: Increasing the cutoff level results in measurable speedup compared to the serial implementation.
+- Memory Safety: No memory leaks or invalid accesses occur when threads are created, joined, or freed.
+
+```
+bash mergesort_tests.sh
+```
+Output summary is saved in `test_output.txt`.
+>>>>>>> aeea5e2 (readme done by lisa)
 
 ## Reflection and Self Assessment
 
-Discuss the issues you encountered during development and testing. What
-problems did you have? What did you have to research and learn on your own?
-What kinds of errors did you get? How did you fix them?
+During development, several issues were encountered related to thread synchronization and pointer management.
 
-What parts of the project did you find challenging? Is there anything that
-finally "clicked" for you in the process of working on this project? How well
-did the development and testing process go for you?
+### Challenges and Learning Points:
+
+#### Thread Argument Passing:
+Initially, threads shared the same struct argument, leading to race conditions. The fix was to dynamically allocate memory for each argument using malloc() inside buildArgs() and free it after the thread completed.
+
+#### Thread Explosion / Resource Limit:
+Early versions spawned too many threads, causing system slowdown. To resolve this, a global thread counter with a mutex was introduced to cap the number of active threads and ensure safe concurrent updates.
+
+#### Merging Logic:
+The merge step originally overwrote unsorted data in A. Introducing the buffer array B and using memcpy() after merging resolved this and ensured stability.
+
+#### Deadlocks and Incorrect Joins:
+Some tests initially hung because pthread_join() was being called incorrectly or on uninitialized thread handles. The logic was corrected to only join successfully created threads.
+
+#### Performance Tuning:
+Through experimentation, the team learned that excessive thread creation at deep recursion levels leads to diminishing returns due to context-switch overhead. Adjusting the cutoff parameter provided a balance between parallel speedup and system stability.
+
+#### Valgrind Debugging:
+Running Valgrind helped identify a few unfreed memory allocations from buildArgs(). Adding explicit free(arg) after thread joins fixed all memory leaks.
+
+#### What Finally Clicked:
+
+Understanding that parallelism is not free — threads must be carefully managed to avoid oversubscription and overhead that can actually slow down the program.
+
+Realizing the importance of synchronization and data sharing safety when multiple threads operate on overlapping memory.
+
+#### Overall Assessment:
+
+The development process was iterative but productive. Each debugging session led to a deeper understanding of thread creation, joining, and synchronization.
+
+The final implementation met the performance goal (achieving over 2× speedup compared to serial mergesort on large arrays).
+
+The testing framework and Valgrind analysis confirmed both correctness and memory safety.
 
 ## Sources Used
 
