@@ -43,11 +43,11 @@ sudo apt install valgrind
 
 ## Features and usage
 
-This program implements both serial and parallel merge sort using the POSIX threads (pthreads) library to demonstrate inter-thread synchronization and parellelism. 
+This program implements both non-parallel and parallel merge sort using the POSIX threads (pthreads) library to demonstrate inter-thread synchronization and parellelism. 
 
 ### Key Features:
-- Implements serial mergesort as a baseline algorithm 
-- Implements parallel mergesort that dynamically spawns threads based on a user-specified cutoff level. 
+- Implements standard mergesort as a baseline algorithm 
+- Implements parallel mergesort that dynamically creates threads based on a user-specified cutoff level. 
 - Uses a global mutex and thread counter to safely manage concurrent thread creation
 - Performs stable merging of sorted subarrays using a secondary buffer array 
 - Supports command-line arguments for `array size`, recursion `cut off` depth, and random `seed` for reproducible testing. 
@@ -63,7 +63,7 @@ make all
 ```
 Examples:
 ```
-# Serial mergesort (no threading)
+# Non-parallel mergesort (no threading)
 ./test-mergesort 1000000 0 42
 
 # Parallel mergesort up to 3 levels of threading
@@ -79,31 +79,21 @@ As the cutoff level increases, the program recursively creates more threads up t
 
 A bash script was created that runs this parallel mergesort on varying values of input size and cutoff level. This was then compared to a regular sorting algorithm provided by the bash terminal. The seed was kept the same across all tests for consistent testing.
 
-<<<<<<< HEAD
-The outputs of all these tests, including the time it took to sort them is written to `test_output.log` during test execution. For example:
-```
-Test with size=1000000, cutoff=10
-Sorting 1000000 elements took 0.09 seconds.
-```
-
-Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test is skipped if Valgrind is not installed. The terminal logs of valgrind are also written to `valgrind_output.log`.
-=======
-Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test is skipped if Valgrind is not installed
+Additionally, Valgrind was used to test for memory leaks, especially in the creation and deletion of threads. This test is skipped if Valgrind is not installed.
 
 This process validates:
 - Correctness: The array is sorted in ascending order for all tested configurations.
-- Performance: Increasing the cutoff level results in measurable speedup compared to the serial implementation.
+- Performance: Increasing the cutoff level results in measurable speedup compared to the non-parallel implementation.
 - Memory Safety: No memory leaks or invalid accesses occur when threads are created, joined, or freed.
 
-```
-bash mergesort_tests.sh
+```bash 
+./mergesort_tests.sh
 ```
 Output summary is saved in `test_output.txt`.
->>>>>>> aeea5e2 (readme done by lisa)
 
 ## Reflection and Self Assessment
 
-During development, several issues were encountered related to thread synchronization and pointer management.
+During development, several issues were encountered related to thread synchronisation and pointer management.
 
 ### Challenges and Learning Points:
 
@@ -113,11 +103,8 @@ Initially, threads shared the same struct argument, leading to race conditions. 
 #### Thread Explosion / Resource Limit:
 Early versions spawned too many threads, causing system slowdown. To resolve this, a global thread counter with a mutex was introduced to cap the number of active threads and ensure safe concurrent updates.
 
-#### Merging Logic:
-The merge step originally overwrote unsorted data in A. Introducing the buffer array B and using memcpy() after merging resolved this and ensured stability.
-
 #### Deadlocks and Incorrect Joins:
-Some tests initially hung because pthread_join() was being called incorrectly or on uninitialized thread handles. The logic was corrected to only join successfully created threads.
+Some tests initially hung because pthread_join() was being called incorrectly or on uninitialised thread handles. The logic was corrected to only join successfully created threads.
 
 #### Performance Tuning:
 Through experimentation, the team learned that excessive thread creation at deep recursion levels leads to diminishing returns due to context-switch overhead. Adjusting the cutoff parameter provided a balance between parallel speedup and system stability.
@@ -125,17 +112,17 @@ Through experimentation, the team learned that excessive thread creation at deep
 #### Valgrind Debugging:
 Running Valgrind helped identify a few unfreed memory allocations from buildArgs(). Adding explicit free(arg) after thread joins fixed all memory leaks.
 
-#### What Finally Clicked:
+#### Other Things We Leanred
 
-Understanding that parallelism is not free — threads must be carefully managed to avoid oversubscription and overhead that can actually slow down the program.
+Understanding that parallelism is not free threads must be carefully managed to avoid oversubscription and overhead that can actually slow down the program.
 
-Realizing the importance of synchronization and data sharing safety when multiple threads operate on overlapping memory.
+Realising the importance of synchronisation and data sharing safety when multiple threads operate on overlapping memory.
 
 #### Overall Assessment:
 
-The development process was iterative but productive. Each debugging session led to a deeper understanding of thread creation, joining, and synchronization.
+The development process was iterative but productive. Each debugging session led to a deeper understanding of thread creation, joining, and synchronisation.
 
-The final implementation met the performance goal (achieving over 2× speedup compared to serial mergesort on large arrays).
+The final implementation met the performance goal (achieving significant exponential increased performance compared to standard mergesort on large arrays).
 
 The testing framework and Valgrind analysis confirmed both correctness and memory safety.
 
