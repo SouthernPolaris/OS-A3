@@ -155,18 +155,26 @@ void * parallel_mergesort(void *arg){
 
     // Join any threads we successfully created, both left and right. Free child args previously allocated
 	if(createdLeftThread){
-		pthread_join(tL, NULL);
-		pthread_mutex_lock(&thread_count_mutex);
-		thread_count--;
-		pthread_mutex_unlock(&thread_count_mutex);
+		int race_condition = pthread_join(tL, NULL);
+		if (race_condition != 0) {
+			fprintf(stderr, "Error joining left thread\n");
+		} else {			
+			pthread_mutex_lock(&thread_count_mutex);
+			thread_count--;
+			pthread_mutex_unlock(&thread_count_mutex);
+		}
 		free(leftArg);
 	}
 
 	if(createdRightThread){
-		pthread_join(tR, NULL);
-		pthread_mutex_lock(&thread_count_mutex);
-		thread_count--;
-		pthread_mutex_unlock(&thread_count_mutex);
+		int race_condition = pthread_join(tR, NULL);
+		if (race_condition != 0) {
+			fprintf(stderr, "Error joining right thread\n");
+		} else {
+			pthread_mutex_lock(&thread_count_mutex);
+			thread_count--;
+			pthread_mutex_unlock(&thread_count_mutex);
+		}
 		free(rightArg);
 	}
 
