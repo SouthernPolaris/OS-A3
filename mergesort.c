@@ -93,7 +93,7 @@ void * parallel_mergesort(void *arg){
 	int createdRightThread = 0;	// flag to indicate if right thread was created
 
 	// Create two threads for the two halves
-	// If creation fails, fall back to normal on that half 
+	// If creation fails, fall back to normal non-parallel on that half 
 	if(leftArg){
 
 		// Lock mutex to check thread count
