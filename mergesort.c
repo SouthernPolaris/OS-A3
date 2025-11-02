@@ -9,9 +9,7 @@
 #include <stdlib.h> /* for malloc */
 #undef mergesort
 
-#define MAX_THREADS sysconf(_SC_NPROCESSORS_ONLN)	// maximum number of threads allowed - set to number of CPU cores
-#include <unistd.h>		// for sysconf to get number of CPU cores
-
+#define MAX_THREADS 100
 #include "mergesort.h"
 #include <pthread.h>
 
