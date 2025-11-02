@@ -70,5 +70,6 @@ did the development and testing process go for you?
 
 ## Sources Used
 
-https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
-https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks
+lhunath 2009, *How can I check if a program exists from a Bash script?*, StackOverflow, 24 March, viewed 2 November 2025, <https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script>
+
+user7851115 2017, *How do I use valgrind to find memory leaks?*, StackOverflow, 8 July, viewed 2 November 2025, <https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks>
